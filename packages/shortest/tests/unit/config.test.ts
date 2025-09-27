@@ -204,7 +204,7 @@ describe("Config parsing", () => {
           },
         };
         expect(() => parseConfig(userConfig)).toThrowError(
-          /Invalid shortest\.config\n(?:\u001b\[\d+m)?ai\.provider(?:\u001b\[\d+m)?: Invalid literal value, expected "anthropic" \(received: "unknown"\)/,
+          /Invalid discriminator value. Expected 'anthropic' | 'litellm'/,
         );
       });
     });

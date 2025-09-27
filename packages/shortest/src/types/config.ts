@@ -28,7 +28,7 @@ export const ANTHROPIC_MODELS = [
 export const anthropicModelSchema = z.enum(ANTHROPIC_MODELS);
 export type AnthropicModel = z.infer<typeof anthropicModelSchema>;
 
-const aiSchema = z
+const anthropicSchema = z
   .object({
     provider: z.literal("anthropic"),
     apiKey: z
@@ -41,6 +41,27 @@ const aiSchema = z
     model: z.enum(ANTHROPIC_MODELS).default(ANTHROPIC_MODELS[0]),
   })
   .strict();
+
+const litellmSchema = z
+  .object({
+    provider: z.literal("litellm"),
+    apiKey: z
+      .string()
+      .optional()
+      .default(
+        () =>
+          process.env[getShortestEnvName("LITELLM_API_KEY")] ||
+          process.env.LITELLM_API_KEY!,
+      ),
+    model: z.string(),
+    baseURL: z.string().url(),
+  })
+  .strict();
+
+const aiSchema = z.discriminatedUnion("provider", [
+  anthropicSchema,
+  litellmSchema,
+]);
 export type AIConfig = z.infer<typeof aiSchema>;
 
 const cachingSchema = z
@@ -79,10 +100,19 @@ export const configSchema = z
   })
   .strict();
 
+const aiUserSchema = z.discriminatedUnion("provider", [
+  anthropicSchema.partial().required({
+    provider: true,
+  }),
+  litellmSchema.partial().required({
+    provider: true,
+  }),
+]);
+
 export const userConfigSchema = configSchema.extend({
   browser: browserSchema.optional(),
   testPattern: testPatternSchema.optional(),
-  ai: aiSchema.strict().partial().optional(),
+  ai: aiUserSchema.optional(),
   caching: cachingSchema.strict().partial().optional(),
 });
 
